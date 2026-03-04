@@ -9,7 +9,7 @@ export const Scenes: Record<string, SceneComponent> = {
 
 export const sceneKeys = Object.keys(Scenes);
 
-export const defaultScene = sceneKeys[0];
+export const defaultScene = "Spinning-Box";
 
 export const pathFromScene = (sceneKey: string) => `/${sceneKey.toLowerCase()}`;
 

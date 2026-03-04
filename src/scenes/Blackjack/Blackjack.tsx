@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { ContactShadows, OrbitControls } from "@react-three/drei";
+import { ContactShadows } from "@react-three/drei";
 import { Object3D, type Group } from "three";
 
 import type { SceneProps } from "@src/scenes/types";
@@ -55,7 +55,6 @@ function BlackjackThree() {
           far={3}
         /> */}
       </group>
-      <OrbitControls enableDamping enablePan={false} maxPolarAngle={Math.PI} />
     </>
   );
 }
