@@ -6,7 +6,7 @@ import {
   useGLTF,
 } from "@react-three/drei";
 import { useControls } from "leva";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 
 import type { SceneProps } from "@src/scenes/types";
@@ -59,12 +59,22 @@ const defaultModelName = availableModels[0]?.fileName ?? EMPTY_MODEL_VALUE;
 
 function SelectedModel({ modelUrl }: { modelUrl: string }) {
   const gltf = useGLTF(modelUrl);
-  return <primitive object={gltf.scene as Group} position={[0, 0, 0]} />;
+  const modelScene = useMemo(() => {
+    // Avoid mutating cached GLTF scene directly; use a visible clone per selection.
+    const instance = gltf.scene.clone(true) as Group;
+    instance.visible = true;
+    return instance;
+  }, [gltf.scene]);
+
+  return <primitive object={modelScene} position={[0, 0, 0]} dispose={null} />;
 }
 
 function ModelLoadingFallback({ selectedModel }: { selectedModel: string }) {
   const { progress, loaded, total, item } = useProgress();
-  const isSelectedModelItem = item?.includes(selectedModel) ?? false;
+  const decodedItem = item ? decodeURIComponent(item) : "";
+  const isSelectedModelItem =
+    (item?.includes(selectedModel) ?? false) ||
+    decodedItem.includes(selectedModel);
 
   useEffect(() => {
     if (!isSelectedModelItem) return;
@@ -95,6 +105,7 @@ function ModelLoadingFallback({ selectedModel }: { selectedModel: string }) {
 
 function ModelsPlaygroundThree() {
   const hasModels = availableModels.length > 0;
+  const previousModelUrlRef = useRef<string | undefined>(undefined);
   const selectionOptions = hasModels
     ? modelOptions
     : { "No models found in ./models": EMPTY_MODEL_VALUE };
@@ -113,6 +124,30 @@ function ModelsPlaygroundThree() {
   const selectedModelUrl = hasModels
     ? modelUrlByName[selectedModel]
     : undefined;
+
+  useEffect(() => {
+    const previousModelUrl = previousModelUrlRef.current;
+
+    if (previousModelUrl && previousModelUrl !== selectedModelUrl) {
+      // Drop stale model from loader cache so long sessions with many models don't bloat memory.
+      console.log(
+        `[ModelsPlayground] Clearing cached model: ${previousModelUrl}`,
+      );
+      useGLTF.clear(previousModelUrl);
+    }
+
+    previousModelUrlRef.current = selectedModelUrl;
+  }, [selectedModelUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (!previousModelUrlRef.current) return;
+      console.log(
+        `[ModelsPlayground] Clearing cached model on unmount: ${previousModelUrlRef.current}`,
+      );
+      useGLTF.clear(previousModelUrlRef.current);
+    };
+  }, []);
 
   return (
     <>
