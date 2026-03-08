@@ -19,7 +19,7 @@ export function SceneShell({ sceneKey, SceneComponent }: SceneShellProps) {
 
   const overlay = useMemo(
     () => <SceneComponent isThree={false} />,
-    [SceneComponent]
+    [SceneComponent],
   );
 
   return (

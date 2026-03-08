@@ -1,6 +1,5 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { ContactShadows } from "@react-three/drei";
 import { Object3D, type Group } from "three";
 
 import type { SceneProps } from "@src/scenes/types";
@@ -59,6 +58,6 @@ function BlackjackThree() {
   );
 }
 
-export default function Blackjack({ isThree, containerRef }: SceneProps) {
+export default function Blackjack({ isThree }: SceneProps) {
   return isThree ? <BlackjackThree /> : null;
 }
