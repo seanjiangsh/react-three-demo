@@ -55,7 +55,7 @@ const modelUrlByName = availableModels.reduce<Record<string, string>>(
 );
 
 const EMPTY_MODEL_VALUE = "__no_model_available__";
-const defaultModelName = availableModels[0]?.fileName ?? EMPTY_MODEL_VALUE;
+const defaultModelName = availableModels.at(-1)?.fileName ?? EMPTY_MODEL_VALUE;
 
 function SelectedModel({ modelUrl }: { modelUrl: string }) {
   const gltf = useGLTF(modelUrl);
@@ -153,8 +153,9 @@ function ModelsPlaygroundThree() {
     <>
       <PerspectiveCamera makeDefault position={[4.5, 3, 5.5]} fov={80} />
       <color attach="background" args={["#4c6295"]} />
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={1} />
       <directionalLight castShadow intensity={4} position={[5, 7, 6]} />
+      <directionalLight castShadow intensity={1} position={[-10, -10, -10]} />
       {selectedModelUrl ? (
         <Suspense
           fallback={<ModelLoadingFallback selectedModel={selectedModel} />}
