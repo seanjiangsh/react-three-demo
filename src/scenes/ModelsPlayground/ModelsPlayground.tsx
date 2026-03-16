@@ -5,11 +5,12 @@ import {
   useProgress,
   useGLTF,
 } from "@react-three/drei";
-import { useThree } from "@react-three/fiber";
+import { useLoader, useThree } from "@react-three/fiber";
 import { useControls } from "leva";
 import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Box3,
+  CubeTextureLoader,
   MathUtils,
   PerspectiveCamera as ThreePerspectiveCamera,
   Sphere,
@@ -19,6 +20,13 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { Group } from "three";
 
 import type { SceneProps } from "@src/scenes/types";
+
+import px from "./background/px.png";
+import nx from "./background/nx.png";
+import py from "./background/py.png";
+import ny from "./background/ny.png";
+import pz from "./background/pz.png";
+import nz from "./background/nz.png";
 
 type ModelDefinition = {
   fileName: string;
@@ -190,6 +198,9 @@ function ModelLoadingFallback({ selectedModel }: { selectedModel: string }) {
 
 function ModelsPlaygroundThree() {
   const { size: viewportSize } = useThree();
+  const cubeTexture = useLoader(CubeTextureLoader, [
+    [px, nx, py, ny, pz, nz],
+  ])[0];
   const hasModels = availableModels.length > 0;
   const previousModelUrlRef = useRef<string | undefined>(undefined);
   const cameraRef = useRef<ThreePerspectiveCamera | null>(null);
@@ -268,7 +279,8 @@ function ModelsPlaygroundThree() {
         position={[4.5, 3, 5.5]}
         fov={80}
       />
-      <color attach="background" args={["#4c6295"]} />
+      <primitive attach="background" object={cubeTexture} />
+      <primitive attach="environment" object={cubeTexture} />
       <ambientLight intensity={1} />
       <directionalLight castShadow intensity={4} position={[5, 7, 6]} />
       <directionalLight castShadow intensity={1} position={[-10, -10, -10]} />
