@@ -2,6 +2,10 @@
 
 React + TypeScript + Vite starter wired for @react-three/fiber with @react-three/drei helpers. Scenes are hash-routed and registered from a central `Scenes` map so you can add demos without touching the router.
 
+## Live demo
+
+GitHub Pages: https://seanjiangsh.github.io/react-three-demo/
+
 ## Getting started
 
 ```bash
