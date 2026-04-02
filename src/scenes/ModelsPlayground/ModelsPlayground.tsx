@@ -34,6 +34,11 @@ type ModelDefinition = {
   url: string;
 };
 
+const modelNameCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
 // Discover all glTF models in the local models folder at build time.
 const modelModules = import.meta.glob("./models/*.{glb,gltf}", {
   eager: true,
@@ -53,7 +58,7 @@ const availableModels: ModelDefinition[] = Object.entries(modelModules)
     };
   })
   .filter((model): model is ModelDefinition => model !== null)
-  .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  .sort((a, b) => modelNameCollator.compare(a.displayName, b.displayName));
 
 const modelOptions = availableModels.reduce<Record<string, string>>(
   (acc, model) => {
