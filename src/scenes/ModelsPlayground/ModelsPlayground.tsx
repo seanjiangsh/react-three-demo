@@ -11,6 +11,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Box3,
   CubeTextureLoader,
+  Material,
   MathUtils,
   PerspectiveCamera as ThreePerspectiveCamera,
   Sphere,
@@ -142,6 +143,83 @@ function fitCameraToObject(
   }
 }
 
+function logLoadedModelDetails(
+  modelUrl: string,
+  modelScene: Group,
+  animationCount: number,
+) {
+  const bounds = new Box3().setFromObject(modelScene);
+  const size = new Vector3();
+  const center = new Vector3();
+  const sphere = new Sphere();
+  const materialNames = new Set<string>();
+  let nodeCount = 0;
+  let meshCount = 0;
+  let triangleCount = 0;
+
+  modelScene.traverse((node) => {
+    nodeCount += 1;
+    const meshNode = node as {
+      isMesh?: boolean;
+      geometry?: {
+        index?: { count: number } | null;
+        attributes?: { position?: { count: number } };
+      };
+      material?: Material | Material[];
+    };
+
+    if (!meshNode.isMesh) return;
+
+    meshCount += 1;
+    const geometry = meshNode.geometry;
+    const indexCount = geometry?.index?.count;
+    const positionCount = geometry?.attributes?.position?.count;
+    if (typeof indexCount === "number") {
+      triangleCount += Math.floor(indexCount / 3);
+    } else if (typeof positionCount === "number") {
+      triangleCount += Math.floor(positionCount / 3);
+    }
+
+    const materials = Array.isArray(meshNode.material)
+      ? meshNode.material
+      : meshNode.material
+        ? [meshNode.material]
+        : [];
+    materials.forEach((material, index) => {
+      materialNames.add(material.name || `unnamed_material_${index + 1}`);
+    });
+  });
+
+  if (!bounds.isEmpty()) {
+    bounds.getSize(size);
+    bounds.getCenter(center);
+    bounds.getBoundingSphere(sphere);
+  }
+
+  console.groupCollapsed(`[ModelsPlayground] Loaded model: ${modelUrl}`);
+  console.log("Name:", modelScene.name || "(unnamed scene root)");
+  console.log("Animations:", animationCount);
+  console.log("Node count:", nodeCount);
+  console.log("Mesh count:", meshCount);
+  console.log("Estimated triangle count:", triangleCount);
+  console.log("Material count:", materialNames.size);
+  console.log("Materials:", [...materialNames]);
+  if (!bounds.isEmpty()) {
+    console.log("Bounds size:", {
+      x: Number(size.x.toFixed(3)),
+      y: Number(size.y.toFixed(3)),
+      z: Number(size.z.toFixed(3)),
+    });
+    console.log("Bounds center:", {
+      x: Number(center.x.toFixed(3)),
+      y: Number(center.y.toFixed(3)),
+      z: Number(center.z.toFixed(3)),
+    });
+    console.log("Bounding sphere radius:", Number(sphere.radius.toFixed(3)));
+  }
+  console.groupEnd();
+}
+
 function SelectedModel({
   modelUrl,
   onModelReady,
@@ -159,10 +237,11 @@ function SelectedModel({
 
   useEffect(() => {
     onModelReady?.(modelScene);
+    logLoadedModelDetails(modelUrl, modelScene, gltf.animations.length);
     return () => {
       onModelReady?.(null);
     };
-  }, [modelScene, onModelReady]);
+  }, [gltf.animations.length, modelScene, modelUrl, onModelReady]);
 
   return <primitive object={modelScene} position={[0, 0, 0]} dispose={null} />;
 }
@@ -287,8 +366,8 @@ function ModelsPlaygroundThree() {
       <primitive attach="background" object={cubeTexture} />
       <primitive attach="environment" object={cubeTexture} />
       <ambientLight intensity={1} />
-      <directionalLight castShadow intensity={4} position={[5, 7, 6]} />
-      <directionalLight castShadow intensity={1} position={[-10, -10, -10]} />
+      {/* <directionalLight castShadow intensity={4} position={[5, 7, 6]} />
+      <directionalLight castShadow intensity={1} position={[-10, -10, -10]} /> */}
       {selectedModelUrl ? (
         <Suspense
           fallback={<ModelLoadingFallback selectedModel={selectedModel} />}
